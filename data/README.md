@@ -1,0 +1,1 @@
+四场洪水均为虚拟教学数据，6 h 步长，2000 km²。events 包含六站雨量、蒸发皿蒸发、出口观测流量。events_index.csv 提供每场初始状态，basin_info.csv 记录站点权重。thresholds.csv 为警戒与保证流量，scenarios.csv 定义以 event2 为基准的十五个雨量缩放与时移组合。frozen_parameters.json 为一期以 event1–3 率定后选定并冻结的参数。event4 留作独立检验。

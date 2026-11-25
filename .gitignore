@@ -1,0 +1,13 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+var/
+*.sqlite*
+*.db
+*.log
+*.aux
+*.out
+*.toc
+.env
+.venv/
+build/
