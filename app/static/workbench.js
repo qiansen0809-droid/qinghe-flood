@@ -62,13 +62,13 @@ function hydro(result){
     const x=i=>L+i*(W-L-R)/Math.max(1,n-1),y=v=>T+(1-v/(4*step))*(H-T-B);
     const point=(v,i)=>x(i).toFixed(2)+","+y(v).toFixed(2);
     function line(arr,color,dash){if(!Array.isArray(arr))return "";let d="",move=true;arr.forEach((v,i)=>{if(!useful(v)){move=true;return;}d+=(move?"M":"L")+point(v,i);move=false;});return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.4"${dash?' stroke-dasharray="7 4"':""}/>`;}
-    let grid="",ticks="";for(let j=0;j<=4;j++){const v=j*step;grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#d5dfdb"/><text x="${L-9}" y="${y(v)+4}" text-anchor="end">${compact(v)}</text>`;}
+    let grid="",ticks="";for(let j=0;j<=4;j++){const v=j*step;grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#d4deec"/><text x="${L-9}" y="${y(v)+4}" text-anchor="end">${compact(v)}</text>`;}
     for(const i of new Set([0,Math.round((n-1)/3),Math.round(2*(n-1)/3),n-1]))ticks+=`<text x="${x(i)}" y="${H-16}" text-anchor="${i===0?"start":i===n-1?"end":"middle"}">${esc(String(result.times[i]).replace("T"," ").slice(5,16))}</text>`;
     let band="";if(store.band&&result.p05?.length===n&&result.p95?.length===n&&[...result.p05,...result.p95].every(useful)){
-        band=`<polygon fill="url(#hatch)" stroke="#707c72" stroke-width="0.8" points="${[...result.p95.map(point),...result.p05.map(point).reverse()].join(" ")}"/>`;}
-    const raw=store.raw&&result.raw?.some((v,i)=>v!==result.forecast[i])?line(result.raw,"#9b571f",true):"";
+        band=`<polygon fill="url(#hatch)" stroke="#7d90ae" stroke-width="0.8" points="${[...result.p95.map(point),...result.p05.map(point).reverse()].join(" ")}"/>`;}
+    const raw=store.raw&&result.raw?.some((v,i)=>v!==result.forecast[i])?line(result.raw,"#a55916",true):"";
     const dots=store.obs?(result.observed||[]).map((v,i)=>useful(v)?`<circle cx="${x(i)}" cy="${y(v)}" r="2.7" stroke="#141414" fill="white"><title>${esc(result.times[i])} 实测 ${compact(v)} m³/s</title></circle>`:"").join(""):"";
-    return `<figure class="figure"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="流量过程对比图，横轴为时间，纵轴为流量，单位立方米每秒"><defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#e2ebe4"/><path d="M0,6 L6,0" stroke="#8b9d93" stroke-width="1"/></pattern></defs><g font-size="12" fill="#395058"><text x="3" y="13">m³/s</text>${grid}${ticks}</g>${band}${raw}${line(result.forecast,"#075e75",false)}${dots}</svg></figure>`;}
+    return `<figure class="figure"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="流量过程对比图，横轴为时间，纵轴为流量，单位立方米每秒"><defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#e1e9f5"/><path d="M0,6 L6,0" stroke="#7186a6" stroke-width="1"/></pattern></defs><g font-size="12" fill="#435671"><text x="3" y="13">m³/s</text>${grid}${ticks}</g>${band}${raw}${line(result.forecast,"#193d78",false)}${dots}</svg></figure>`;}
 function chartPanel(){
     const r=store.run;if(!r){
         const e=store.preview;

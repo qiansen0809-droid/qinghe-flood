@@ -31,6 +31,7 @@ python -m uvicorn app.api:app --host 127.0.0.1 --port 8000 --workers 1
 ```sh
 python -m pytest -q
 python -m scripts.collect_evidence
+python -m scripts.diagnose_updates
 python -m scripts.export_openapi
 # 以下需先启动服务，会新建验收预报及站内通知
 python scripts/smoke.py
