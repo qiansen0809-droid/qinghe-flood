@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>青河流域 · 洪水预报工作台</title><link rel="stylesheet" href="/static/workbench.css"><script defer src="/static/workbench.js"></script></head>
+<body>
+<a class="skip" href="#main">跳至主要内容</a>
+<header class="mast"><div class="brand"><span class="mark" aria-hidden="true">≋</span><div><strong>青河流域</strong><span>洪水预报系统</span></div></div><div class="station">青河水文站 <span class="divider">/</span> <span id="connection" aria-live="polite">正在连接</span></div></header>
+<div class="layout"><aside><nav aria-label="工作区">
+<button class="nav current" data-view="work">预报工作台</button><button class="nav" data-view="events">数据与质控</button><button class="nav" data-view="plans">参数方案</button><button class="nav" data-view="schedule">定时起报</button><button class="nav" data-view="alerts">预警通知 <span id="alert-count"></span></button><button class="nav" data-view="audit">操作记录</button>
+</nav><div class="aside-note">模型 · 新安江<br>流域面积 2,000 km²<br>计算时段 6 h</div></aside>
+<main id="main" tabindex="-1"><div class="page-head"><h1 id="page-title">预报工作台</h1><button id="refresh" type="button" class="quiet">刷新</button></div><div id="notice" role="status" aria-live="polite" hidden></div><div id="content" aria-busy="true">正在载入数据…</div></main></div>
+<dialog id="dialog"><form method="dialog"><button value="close" aria-label="关闭" class="close">×</button></form><div id="dialog-body"></div></dialog>
+</body></html>
