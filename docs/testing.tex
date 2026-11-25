@@ -1,0 +1,38 @@
+\input{common}
+\begin{document}\titleline{青河流域洪水预报系统测试报告}
+\section{基准与测试环境}
+教学包提供四场洪水，每场40个6小时时段。确定性黄金数据来自一期独立存档的逐时段出口流量。测试使用临时SQLite数据库，启动时只导入教学场次和冻结参数。功能与HTTP测试在 Python 3.13 环境执行，另通过 GitHub Actions 的 Ubuntu 执行器验证 Docker Compose。实际浏览器使用 Edge 加载本地服务。所有测量均使用教学数据。
+\section{验收记录}
+\noindent\begin{tabularx}{\linewidth}{@{}p{2.2cm}LL@{}}\toprule 项目 & 测试输入与操作 & 判据及结果\\\midrule
+M1 质控 & 分别置空观测、写入异常降雨、重新导入场次。 & 观测缺测标记后仍可起报；异常强迫阻断起报并保留质控记录。通过。\\
+M2 起报 & HTTP 一键起报；创建周期任务，让后台线程实际到期，再重启服务。 & 产生可查询的产品编号，调度配置持久化，停用任务后停止派发。通过。\\
+M3 结果 & 加载历史结果、叠加观测，签发前后分别下载公报。 & 草稿返回409，签发后返回带编号附件；附件时序与存档逐点一致。通过。\\
+M4 版本 & 新建版本，切换活动方案，归档停用版；查原预报。 & 后续起报使用新版本，原产品仍引用原参数。通过。\\
+M5 回放 & 修改输入和活动参数后回放；重启后回放；打开独立备份回放。 & 保存的摘要与快照重算一致，签发身份可复核。通过。\\
+O1 校正 & 更新一个时段观测，并修改截止时刻之后的观测。 & 本期与更早先验不变，下一期响应已到观测，截止后的观测不改变预测。通过。\\
+O2 通知 & 第二场起报、查看消息、重复签发和标记已读。 & 持久通知指向正确产品，已读状态可以查询。通过。\\
+O3 集合 & 计算15个情景，将1.0倍率、0时移成员与基准对照。 & 中性成员与基准一致；40个时段分位数次序正确。通过。\\
+O4 工作台 & 在真实浏览器完成起报、签发、下载、回放、质控查看及定时任务创建与停用。 & 过程图含40个观测点及区间，关键操作后状态一致，未出现未处理的页面错误。通过。\\\bottomrule\end{tabularx}
+\section{数值与部署证据}
+\begin{table}[htbp]\centering\small\caption{一期黄金流量与二期基准预报的逐点对照，流量单位为 m³/s}
+\begin{tabular}{lrrr}\toprule 场次 & 点数 & 最大绝对差 & DC\\\midrule
+第一场 &40&$2.27\times10^{-13}$&0.999734\\
+第二场 &40&$1.14\times10^{-13}$&0.998397\\
+第三场 &40&$3.41\times10^{-13}$&0.999730\\
+第四场 &40&$1.71\times10^{-13}$&0.999085\\\bottomrule\end{tabular}\end{table}
+四场均通过 $10^{-8}$\,m³/s 绝对容差的回归检查。第二场公报、情景与校正实验原始数值分别在 \fn{docs/evidence/bulletin-example.json}、\fn{event2_interval.csv}、\fn{event2_member_peaks.csv} 和 \fn{rolling.csv} 中。全部19项 pytest 用例通过。实际HTTP冒烟流程核对四场数据、15情景、阈值消息、签发及重启回放。另运行 \fn{python -m scripts.restore_check}，确认从备份恢复后的签发状态、结果摘要与历史回放均正确。
+\par \href{https://github.com/qiansen0809-droid/qinghe-flood/actions/runs/45525400093}{首次通过的容器验收记录}含镜像构建、健康检查、产品签发回放、容器重启和持久化复验。\href{https://github.com/qiansen0809-droid/qinghe-flood/actions}{仓库持续集成记录}按提交保存每次验收的日志与机器可读测试结果。
+\section{复验命令}
+\begin{verbatim}
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+python -m scripts.collect_evidence
+python -m scripts.restore_check
+docker compose up --build -d --wait
+python scripts/smoke.py
+docker compose restart
+docker compose up -d --wait
+python scripts/smoke.py --check-persistence
+\end{verbatim}
+浏览器复验使用 \fn{scripts/smoke_ui.cjs}。先安装 Playwright 及 Chromium，在单独的运行实例上执行。用 \fn{QINGHE_URL} 指定目标地址，用 \fn{QINGHE_SCREENSHOT} 指定工作台截图路径。
+\end{document}

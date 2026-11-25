@@ -1,0 +1,9 @@
+{
+  "product_status": "issued",
+  "replay_match": true,
+  "peak": 868.5949590783392,
+  "warning": "警戒水位",
+  "n_members": 15,
+  "member_alert": 13,
+  "member_high": 6
+}

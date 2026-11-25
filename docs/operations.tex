@@ -1,0 +1,48 @@
+\input{common}
+\begin{document}\titleline{青河流域预报工作台运维与演示手册}
+\section{安装与启动}
+准备 Docker Engine 与 Compose v2，克隆代码仓库并在根目录执行
+\begin{verbatim}
+docker compose up --build -d --wait
+\end{verbatim}
+浏览器访问 \url{http://127.0.0.1:8000/}。首次运行建表并导入四场示例与一期参数。再次启动沿用命名卷中的记录。使用 \fn{docker compose ps} 查看健康状态，\fn{docker compose logs --tail=100 forecast} 查看启动或定时任务异常。普通停止使用 \fn{docker compose down}，需要继续运行时重新执行启动命令。
+\section{本机运行参数}
+\noindent\begin{tabularx}{\linewidth}{@{}lL@{}}\toprule 设置 & 含义与默认值\\\midrule
+\fn{QINGHE_DB} & Python 模式默认为项目内 \fn{var/qinghe.sqlite3}，Compose 将数据库置于命名卷内。\\
+\fn{QINGHE_DATA_DIR} & 默认项目 \fn{data/}，包含参数、阈值、情景与场次初始状态。\\
+\fn{QINGHE_POLL_SECONDS} & 默认每2秒检查一次到期任务。调度以系统时间为准，过程线使用课程数据的本地时刻。\\\bottomrule\end{tabularx}
+\par 本机开发使用 Python 3.13，在虚拟环境中执行
+\begin{verbatim}
+python -m pip install -r requirements-dev.txt
+python -m uvicorn app.api:app --host 127.0.0.1 --port 8000 --workers 1
+\end{verbatim}
+默认部署面向本地受信任的课堂演示。操作员在工作台署名，操作时间与产品记录保存在数据库中。使用单进程运行调度器。服务停机期间跨过多个周期时，恢复后合并处理一次到期起报。
+\section{从入库到签发}
+\begin{enumerate}
+\item 在“数据与质控”查看示例或上传 CSV。六站雨量列与蒸发列必需，时间按6小时递增。新场次需给出七项初始状态。阻断行可在质控记录中定位，修正文件后重新导入同一场次。
+\item 在参数页查看一期参数，按需另存一个版本后启用。选择 event2、启用集合预报，一键起报。查看实测、模拟及分位带，核对500和900\,m³/s阈值。
+\item 打开预警中心查看该次运行生成的站内通知，并标记已读。复核预报后签发，下载含过程线的 JSON 公报。相同产品重复签发保留首次签发信息。
+\item 在历史结果中执行回放。系统校验输入与结果摘要，按快照重算，再比较结果。软件升级后遇到引擎摘要不同时，使用生成产品时的 Git 版本恢复对应服务。
+\item 选择 event4，开启滚动校正，按需指定观测截止时刻。对比水文状态校正前后的曲线。定时任务到期后生成草稿，在复核后签发；演示结束后停用任务。
+\end{enumerate}
+\section{备份与恢复演练}
+SQLite 的在线备份接口可以读到 WAL 内已提交的结果。Python 模式在仓库根目录执行如下命令，目标文件应为新文件。
+\begin{verbatim}
+python scripts/backup.py var/qinghe.sqlite3 qinghe-backup.sqlite3
+\end{verbatim}
+容器模式先将脚本放入运行容器，执行备份并复制到宿主机：
+\begin{verbatim}
+docker compose cp scripts/backup.py forecast:/tmp/backup.py
+docker compose exec forecast python /tmp/backup.py \
+    /srv/state/qinghe.sqlite3 /tmp/qinghe-backup.sqlite3
+docker compose cp forecast:/tmp/qinghe-backup.sqlite3 ./qinghe-backup.sqlite3
+\end{verbatim}
+在 PowerShell 中将上面的多行命令写成一行。恢复时把备份另存为新的数据库文件，设置 \fn{QINGHE_DB} 指向该文件，在另一端口启动同一 Git 版本的服务。进入历史结果，核对原编号、签发人和快照回放。验收通过后再切换使用该数据库。对 Compose 部署，先在新命名卷内放入备份并赋予容器用户 UID 10001 读写权限，再将该卷挂入 \fn{/srv/state}。
+\section{常见现象}
+\begin{description}
+\item[起报返回422] 打开质控详情。缺失降雨或蒸发、时间乱序或错误步长都需要修正。集合预报使用 event2 配套情景；自定义场次可直接起报确定性过程。
+\item[签发公报不可下载] 先检查产品是否已经签发，再使用该产品编号下载。
+\item[没有预警] 先核对确定性预报洪峰。第四场冻结参数的洪峰约409\,m³/s，低于警戒值。第二场约869\,m³/s，会生成一条警戒消息。
+\item[调度未运行] 核对任务启用状态、到期时间、最近错误及服务日志。若使用固定方案版本，还需确认版本仍可用于新的起报。
+\end{description}
+\end{document}
