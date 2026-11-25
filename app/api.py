@@ -6,13 +6,14 @@ import csv
 import math
 import os
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
+from .bulletin import Bulletin, make_bulletin
 from .domain import Service
 from .scheduler import Scheduler
 
@@ -66,8 +67,26 @@ class Extensible(BaseModel):
     model_config = ConfigDict(extra='allow')
 
 
+class QualityFlag(Extensible):
+    row: int
+    column: str
+    reason: str
+    severity: Literal['error','warning']
+
+
 class EventSummary(Extensible):
     event_id: str
+    count: int
+    quality: Literal['ok','warning','blocked']
+    issues: list[QualityFlag]
+
+
+class EventDetails(EventSummary):
+    times: list[str]
+    rain: list[float | None]
+    em: list[float | None]
+    observed: list[float | None]
+    state: InitialState
 
 
 class PlanVersion(Extensible):
@@ -78,19 +97,69 @@ class PlanVersion(Extensible):
     active: bool
 
 
+class Score(BaseModel):
+    n: int
+    dc: float | None
+    rmse: float | None
+
+
+class EnsembleMember(BaseModel):
+    id: str
+    base: str
+    factor: float
+    lag: int
+    forecast: list[float]
+    peak: float
+
+
 class Process(Extensible):
     times: list[str]
     observed: list[float | None]
     forecast: list[float]
     raw: list[float]
+    posterior: list[float]
+    metrics: Score
+    warning: str
+    peak: float
+    peak_time: str
+    members: list[EnsembleMember]
+    p05: list[float]
+    p50: list[float]
+    p95: list[float]
 
 
-class Product(Extensible):
+class RunSummary(Extensible):
     id: int
     event_id: str
     plan_id: int
-    status: str
+    status: Literal['draft','issued']
+    created: str
+    issued_by: str | None
+    issued_at: str | None
+    snapshot_hash: str
+    result_hash: str
+
+
+class Product(RunSummary):
+    snapshot: dict
     result: Process
+
+
+class Alert(BaseModel):
+    id: int
+    run_id: int
+    level: str
+    message: str
+    created: str
+    read_at: str | None
+
+
+class AuditEntry(BaseModel):
+    id: int
+    at: str
+    actor: str
+    action: str
+    subject: str
 
 
 class Replay(Extensible):
@@ -165,7 +234,7 @@ def create_app(db_path=None, data_dir=None, *, enable_scheduler=True):
         service().seed()
         return {'events':service().events()}
 
-    @app.get('/api/events/{event_id}', tags=['入库质控'], summary='查看场次观测、输入和逐条质控记录')
+    @app.get('/api/events/{event_id}', tags=['入库质控'], response_model=EventDetails, summary='查看场次观测、输入和逐条质控记录')
     def event(event_id: str):
         return service().event_detail(event_id)
 
@@ -207,7 +276,7 @@ def create_app(db_path=None, data_dir=None, *, enable_scheduler=True):
     def run(body: Forecast):
         return service().run(**body.model_dump())
 
-    @app.get('/api/runs', tags=['预报产品'], summary='查询历史预报，可按场次及签发状态筛选')
+    @app.get('/api/runs', tags=['预报产品'], response_model=list[RunSummary], summary='查询历史预报，可按场次及签发状态筛选')
     def runs(event_id: str | None=None,status: str | None=None):
         return [r for r in service().runs() if (not event_id or r['event_id']==event_id)
                 and (not status or r['status']==status)]
@@ -224,15 +293,15 @@ def create_app(db_path=None, data_dir=None, *, enable_scheduler=True):
     def replay(run_id: int, body: Command=Command()):
         return service().replay(run_id, actor=body.actor)
 
-    @app.get('/api/alerts', tags=['预警消息'], summary='查询持久化预警消息')
+    @app.get('/api/alerts', tags=['预警消息'], response_model=list[Alert], summary='查询持久化预警消息')
     def alerts():
         return service().notifications()
 
-    @app.post('/api/alerts/{message_id}/read', tags=['预警消息'], summary='确认已读消息')
+    @app.post('/api/alerts/{message_id}/read', tags=['预警消息'], response_model=Alert, summary='确认已读消息')
     def read(message_id: int, body: Command=Command()):
         return service().read_notification(message_id, actor=body.actor)
 
-    @app.get('/api/audit', tags=['留痕回放'], summary='查询操作日志')
+    @app.get('/api/audit', tags=['留痕回放'], response_model=list[AuditEntry], summary='查询操作日志')
     def audit():
         return service().audit()
 
@@ -248,6 +317,16 @@ def create_app(db_path=None, data_dir=None, *, enable_scheduler=True):
     def cancel(job_id: int):
         return app.state.scheduler.cancel(job_id)
 
+    @app.get('/api/runs/{run_id}/bulletin', tags=['预报产品'], response_model=Bulletin,
+             responses={409: {'description':'预报尚未签发'}}, summary='下载已签发的 JSON 洪水预报公报')
+    def bulletin(run_id: int):
+        product = service().detail(run_id)
+        if product['status'] != 'issued':
+            raise HTTPException(status_code=409, detail='预报签发后才可下载公报')
+        doc = make_bulletin(product)
+        headers = {'Content-Disposition': f'attachment; filename="{doc.bulletin_id}.json"'}
+        return JSONResponse(content=doc.model_dump(), headers=headers)
+
     static = ROOT/'app'/'static'
     app.mount('/static', StaticFiles(directory=str(static), check_dir=False), name='static')
 
@@ -260,4 +339,5 @@ def create_app(db_path=None, data_dir=None, *, enable_scheduler=True):
 
 
 app = create_app()
+
 

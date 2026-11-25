@@ -70,7 +70,8 @@ class Service:
         self.path=Path(db_path)
         self.path.parent.mkdir(parents=True,exist_ok=True)
         self.data=Path(data_dir)
-        engine_sources = [Path(__file__).with_name(name).read_bytes()
+        # Ignore Git checkout line endings and optional UTF-8 BOM in the source fingerprint.
+        engine_sources = [Path(__file__).with_name(name).read_text(encoding="utf-8-sig").encode("utf-8")
                           for name in ("engine.py","xaj_model.py")]
         self.engine_hash = hashlib.sha256(b"\0".join(engine_sources)).hexdigest()
         with self.connection() as db:
@@ -266,4 +267,5 @@ class Service:
     def audit(self):
         with self.connection() as db:
             return [dict(row) for row in db.execute("SELECT * FROM history ORDER BY id DESC")]
+
 

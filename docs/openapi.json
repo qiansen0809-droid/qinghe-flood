@@ -1,0 +1,2098 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "青河流域洪水预报系统",
+    "description": "青河教学流域的入库、起报、签发、预警、回放与调度接口。时间序列采用数据包当地时刻，调度时刻为 Unix 秒。",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "运行状态"
+        ],
+        "summary": "服务健康检查",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "入库质控"
+        ],
+        "summary": "列出已入库场次",
+        "operationId": "events_api_events_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EventSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Events Api Events Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/demo": {
+      "post": {
+        "tags": [
+          "入库质控"
+        ],
+        "summary": "幂等导入示例场次与初始方案",
+        "operationId": "demo_api_events_demo_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{event_id}": {
+      "get": {
+        "tags": [
+          "入库质控"
+        ],
+        "summary": "查看场次观测、输入和逐条质控记录",
+        "operationId": "event_api_events__event_id__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{event_id}/import": {
+      "post": {
+        "tags": [
+          "入库质控"
+        ],
+        "summary": "入库 CSV 并记录质控结果",
+        "operationId": "ingest_api_events__event_id__import_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportCSV"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schemes": {
+      "get": {
+        "tags": [
+          "参数方案"
+        ],
+        "summary": "列出参数方案和版本",
+        "operationId": "schemes_api_schemes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlanVersion"
+                  },
+                  "type": "array",
+                  "title": "Response Schemes Api Schemes Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "参数方案"
+        ],
+        "summary": "保存具名参数方案版本",
+        "operationId": "save_scheme_api_schemes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Scheme"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVersion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schemes/{plan_id}": {
+      "get": {
+        "tags": [
+          "参数方案"
+        ],
+        "summary": "读取指定版本",
+        "operationId": "scheme_api_schemes__plan_id__get",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVersion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "参数方案"
+        ],
+        "summary": "归档指定方案版本",
+        "operationId": "delete_scheme_api_schemes__plan_id__delete",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Plan Id"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "operator",
+              "title": "Actor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schemes/{plan_id}/versions": {
+      "post": {
+        "tags": [
+          "参数方案"
+        ],
+        "summary": "基于已有方案保存新版本",
+        "operationId": "version_api_schemes__plan_id__versions_post",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Version"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVersion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schemes/{plan_id}/activate": {
+      "post": {
+        "tags": [
+          "参数方案"
+        ],
+        "summary": "切换当前版本",
+        "operationId": "activate_api_schemes__plan_id__activate_post",
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Command",
+                "default": {
+                  "actor": "operator"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs": {
+      "post": {
+        "tags": [
+          "预报产品"
+        ],
+        "summary": "执行预报并生成产品草稿",
+        "operationId": "run_api_runs_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Forecast"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "预报产品"
+        ],
+        "summary": "查询历史预报，可按场次及签发状态筛选",
+        "operationId": "runs_api_runs_get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RunSummary"
+                  },
+                  "title": "Response Runs Api Runs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "预报产品"
+        ],
+        "summary": "获取过程线、结果及快照",
+        "operationId": "detail_api_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/issue": {
+      "post": {
+        "tags": [
+          "预报产品"
+        ],
+        "summary": "签发预报产品",
+        "operationId": "issue_api_runs__run_id__issue_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Command",
+                "default": {
+                  "actor": "operator"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/replay": {
+      "post": {
+        "tags": [
+          "留痕回放"
+        ],
+        "summary": "从冻结快照重算并比对",
+        "operationId": "replay_api_runs__run_id__replay_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Command",
+                "default": {
+                  "actor": "operator"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Replay"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "tags": [
+          "预警消息"
+        ],
+        "summary": "查询持久化预警消息",
+        "operationId": "alerts_api_alerts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Alert"
+                  },
+                  "type": "array",
+                  "title": "Response Alerts Api Alerts Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts/{message_id}/read": {
+      "post": {
+        "tags": [
+          "预警消息"
+        ],
+        "summary": "确认已读消息",
+        "operationId": "read_api_alerts__message_id__read_post",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Message Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Command",
+                "default": {
+                  "actor": "operator"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Alert"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit": {
+      "get": {
+        "tags": [
+          "留痕回放"
+        ],
+        "summary": "查询操作日志",
+        "operationId": "audit_api_audit_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntry"
+                  },
+                  "type": "array",
+                  "title": "Response Audit Api Audit Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedules": {
+      "get": {
+        "tags": [
+          "起报调度"
+        ],
+        "summary": "列出定时起报任务",
+        "operationId": "schedules_api_schedules_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Timer"
+                  },
+                  "type": "array",
+                  "title": "Response Schedules Api Schedules Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "起报调度"
+        ],
+        "summary": "新增周期起报任务",
+        "operationId": "add_schedule_api_schedules_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Schedule"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Timer"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedules/{job_id}": {
+      "delete": {
+        "tags": [
+          "起报调度"
+        ],
+        "summary": "停用周期起报",
+        "operationId": "cancel_api_schedules__job_id__delete",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Timer"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/bulletin": {
+      "get": {
+        "tags": [
+          "预报产品"
+        ],
+        "summary": "下载已签发的 JSON 洪水预报公报",
+        "operationId": "bulletin_api_runs__run_id__bulletin_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bulletin"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "预报尚未签发"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Alert": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "run_id": {
+            "type": "integer",
+            "title": "Run Id"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "created": {
+            "type": "string",
+            "title": "Created"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "run_id",
+          "level",
+          "message",
+          "created",
+          "read_at"
+        ],
+        "title": "Alert"
+      },
+      "AuditEntry": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "at": {
+            "type": "string",
+            "title": "At"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "at",
+          "actor",
+          "action",
+          "subject"
+        ],
+        "title": "AuditEntry"
+      },
+      "Bulletin": {
+        "properties": {
+          "bulletin_id": {
+            "type": "string",
+            "title": "Bulletin Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "run_id": {
+            "type": "integer",
+            "title": "Run Id"
+          },
+          "station": {
+            "type": "string",
+            "title": "Station"
+          },
+          "signed_by": {
+            "type": "string",
+            "title": "Signed By"
+          },
+          "signed_at": {
+            "type": "string",
+            "title": "Signed At"
+          },
+          "discharge_unit": {
+            "type": "string",
+            "title": "Discharge Unit"
+          },
+          "time_step_hours": {
+            "type": "integer",
+            "title": "Time Step Hours"
+          },
+          "warning_level": {
+            "type": "string",
+            "title": "Warning Level"
+          },
+          "peak_discharge": {
+            "type": "number",
+            "title": "Peak Discharge"
+          },
+          "peak_time": {
+            "type": "string",
+            "title": "Peak Time"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/FlowAtTime"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "snapshot_sha256": {
+            "type": "string",
+            "title": "Snapshot Sha256"
+          },
+          "result_sha256": {
+            "type": "string",
+            "title": "Result Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bulletin_id",
+          "title",
+          "event_id",
+          "run_id",
+          "station",
+          "signed_by",
+          "signed_at",
+          "discharge_unit",
+          "time_step_hours",
+          "warning_level",
+          "peak_discharge",
+          "peak_time",
+          "summary",
+          "series",
+          "snapshot_sha256",
+          "result_sha256"
+        ],
+        "title": "Bulletin"
+      },
+      "Command": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor",
+            "default": "operator"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Command"
+      },
+      "EnsembleMember": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "base": {
+            "type": "string",
+            "title": "Base"
+          },
+          "factor": {
+            "type": "number",
+            "title": "Factor"
+          },
+          "lag": {
+            "type": "integer",
+            "title": "Lag"
+          },
+          "forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Forecast"
+          },
+          "peak": {
+            "type": "number",
+            "title": "Peak"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "base",
+          "factor",
+          "lag",
+          "forecast",
+          "peak"
+        ],
+        "title": "EnsembleMember"
+      },
+      "EventDetails": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warning",
+              "blocked"
+            ],
+            "title": "Quality"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/QualityFlag"
+            },
+            "type": "array",
+            "title": "Issues"
+          },
+          "times": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Times"
+          },
+          "rain": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Rain"
+          },
+          "em": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Em"
+          },
+          "observed": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Observed"
+          },
+          "state": {
+            "$ref": "#/components/schemas/InitialState"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "event_id",
+          "count",
+          "quality",
+          "issues",
+          "times",
+          "rain",
+          "em",
+          "observed",
+          "state"
+        ],
+        "title": "EventDetails"
+      },
+      "EventSummary": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "warning",
+              "blocked"
+            ],
+            "title": "Quality"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/QualityFlag"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "event_id",
+          "count",
+          "quality",
+          "issues"
+        ],
+        "title": "EventSummary"
+      },
+      "FlowAtTime": {
+        "properties": {
+          "time": {
+            "type": "string",
+            "title": "Time"
+          },
+          "discharge": {
+            "type": "number",
+            "title": "Discharge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time",
+          "discharge"
+        ],
+        "title": "FlowAtTime"
+      },
+      "Forecast": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor",
+            "default": "operator"
+          },
+          "event_id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Event Id"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id",
+            "description": "版本 ID；省略时读取当前启用版本"
+          },
+          "correction": {
+            "type": "boolean",
+            "title": "Correction",
+            "description": "使用先前观测修正下一时段流量状态",
+            "default": false
+          },
+          "ensemble": {
+            "type": "boolean",
+            "title": "Ensemble",
+            "description": "为 event2 并行计算十五组情景",
+            "default": false
+          },
+          "cutoff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cutoff",
+            "description": "最后允许同化的观测时刻，例如 2023-07-18 00:00"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id"
+        ],
+        "title": "Forecast"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ImportCSV": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor",
+            "default": "operator"
+          },
+          "csv_text": {
+            "type": "string",
+            "maxLength": 1000000,
+            "minLength": 1,
+            "title": "Csv Text",
+            "description": "带表头的 UTF-8 CSV 文本，格式与 data/events 一致"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InitialState"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "新场次必须给出七个初始状态量；示例场次默认使用索引中的状态"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "csv_text"
+        ],
+        "title": "ImportCSV"
+      },
+      "InitialState": {
+        "properties": {
+          "WU": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Wu"
+          },
+          "WL": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Wl"
+          },
+          "WD": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Wd"
+          },
+          "S": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "S"
+          },
+          "QS": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Qs"
+          },
+          "QI": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Qi"
+          },
+          "QG": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Qg"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "WU",
+          "WL",
+          "WD",
+          "S",
+          "QS",
+          "QI",
+          "QG"
+        ],
+        "title": "InitialState"
+      },
+      "PlanVersion": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Parameters"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "version",
+          "parameters",
+          "active"
+        ],
+        "title": "PlanVersion"
+      },
+      "Process": {
+        "properties": {
+          "times": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Times"
+          },
+          "observed": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Observed"
+          },
+          "forecast": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Forecast"
+          },
+          "raw": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Raw"
+          },
+          "posterior": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Posterior"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/Score"
+          },
+          "warning": {
+            "type": "string",
+            "title": "Warning"
+          },
+          "peak": {
+            "type": "number",
+            "title": "Peak"
+          },
+          "peak_time": {
+            "type": "string",
+            "title": "Peak Time"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/EnsembleMember"
+            },
+            "type": "array",
+            "title": "Members"
+          },
+          "p05": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "P05"
+          },
+          "p50": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "P50"
+          },
+          "p95": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "P95"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "times",
+          "observed",
+          "forecast",
+          "raw",
+          "posterior",
+          "metrics",
+          "warning",
+          "peak",
+          "peak_time",
+          "members",
+          "p05",
+          "p50",
+          "p95"
+        ],
+        "title": "Process"
+      },
+      "Product": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "plan_id": {
+            "type": "integer",
+            "title": "Plan Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "issued"
+            ],
+            "title": "Status"
+          },
+          "created": {
+            "type": "string",
+            "title": "Created"
+          },
+          "issued_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued By"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "snapshot_hash": {
+            "type": "string",
+            "title": "Snapshot Hash"
+          },
+          "result_hash": {
+            "type": "string",
+            "title": "Result Hash"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Snapshot"
+          },
+          "result": {
+            "$ref": "#/components/schemas/Process"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "event_id",
+          "plan_id",
+          "status",
+          "created",
+          "issued_by",
+          "issued_at",
+          "snapshot_hash",
+          "result_hash",
+          "snapshot",
+          "result"
+        ],
+        "title": "Product"
+      },
+      "QualityFlag": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "title": "Severity"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "row",
+          "column",
+          "reason",
+          "severity"
+        ],
+        "title": "QualityFlag"
+      },
+      "Replay": {
+        "properties": {
+          "run_id": {
+            "type": "integer",
+            "title": "Run Id"
+          },
+          "match": {
+            "type": "boolean",
+            "title": "Match"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "run_id",
+          "match"
+        ],
+        "title": "Replay"
+      },
+      "RunSummary": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "plan_id": {
+            "type": "integer",
+            "title": "Plan Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "issued"
+            ],
+            "title": "Status"
+          },
+          "created": {
+            "type": "string",
+            "title": "Created"
+          },
+          "issued_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued By"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "snapshot_hash": {
+            "type": "string",
+            "title": "Snapshot Hash"
+          },
+          "result_hash": {
+            "type": "string",
+            "title": "Result Hash"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "event_id",
+          "plan_id",
+          "status",
+          "created",
+          "issued_by",
+          "issued_at",
+          "snapshot_hash",
+          "result_hash"
+        ],
+        "title": "RunSummary"
+      },
+      "Schedule": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor",
+            "default": "operator"
+          },
+          "event_id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Event Id"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id",
+            "description": "版本 ID；省略时读取当前启用版本"
+          },
+          "correction": {
+            "type": "boolean",
+            "title": "Correction",
+            "description": "使用先前观测修正下一时段流量状态",
+            "default": false
+          },
+          "ensemble": {
+            "type": "boolean",
+            "title": "Ensemble",
+            "description": "为 event2 并行计算十五组情景",
+            "default": false
+          },
+          "cutoff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cutoff",
+            "description": "最后允许同化的观测时刻，例如 2023-07-18 00:00"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "maximum": 31536000.0,
+            "minimum": 1.0,
+            "title": "Interval Seconds",
+            "description": "启动后首个周期到期时起报，单位秒"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "interval_seconds"
+        ],
+        "title": "Schedule"
+      },
+      "Scheme": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor",
+            "default": "operator"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Parameters",
+            "description": "16 个新安江参数的完整集合"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "parameters",
+          "name"
+        ],
+        "title": "Scheme"
+      },
+      "Score": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "dc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dc"
+          },
+          "rmse": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rmse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "dc",
+          "rmse"
+        ],
+        "title": "Score"
+      },
+      "Timer": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "title": "Interval Seconds"
+          },
+          "next_run_at": {
+            "type": "number",
+            "title": "Next Run At"
+          },
+          "last_run_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run Id"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "event_id",
+          "interval_seconds",
+          "next_run_at",
+          "last_run_id",
+          "last_error",
+          "status",
+          "active"
+        ],
+        "title": "Timer"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Version": {
+        "properties": {
+          "actor": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Actor",
+            "default": "operator"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Parameters",
+            "description": "16 个新安江参数的完整集合"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "parameters"
+        ],
+        "title": "Version"
+      }
+    }
+  }
+}
